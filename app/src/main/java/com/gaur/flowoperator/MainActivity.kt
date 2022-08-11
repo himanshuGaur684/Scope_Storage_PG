@@ -14,11 +14,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.gaur.flowoperator.databinding.ActivityMainBinding
-import java.io.BufferedReader
-import java.io.FileOutputStream
-import java.io.InputStream
-import java.io.InputStreamReader
+import java.io.*
 import java.lang.Exception
+import java.lang.StringBuilder
 
 class MainActivity : AppCompatActivity() {
 
@@ -33,6 +31,12 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private val readFile = registerForActivityResult(ActivityResultContracts.StartActivityForResult()){
+        it.data?.data?.let {
+           binding.tvFileContent.text =  readFile(it)
+        }
+    }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,8 +47,38 @@ class MainActivity : AppCompatActivity() {
             createFile()
         }
 
+        binding.btnRead.setOnClickListener {
+            readFile()
+        }
+
 
     }
+
+
+    fun readFile(){
+        val intent =Intent(Intent.ACTION_OPEN_DOCUMENT)
+        intent.addCategory(Intent.CATEGORY_OPENABLE)
+        intent.type="text/*"
+        readFile.launch(intent)
+    }
+    fun readFile(uri:Uri):String{
+        return try {
+            val inputStream = this.contentResolver.openInputStream(uri)
+            val bufferedReader = BufferedReader(InputStreamReader(inputStream))
+            val line = StringBuilder()
+            do {
+                val l = bufferedReader.readLine()
+                l?.let {
+                    line.append(l)
+                }
+            }while (l!=null)
+            line.toString()
+        }catch (e:Exception){
+            e.printStackTrace()
+            ""
+        }
+    }
+
 
     fun createFile(){
         val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
