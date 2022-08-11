@@ -25,6 +25,8 @@ class MainActivity : AppCompatActivity() {
     get() = _binding!!
 
 
+    var uri:Uri?=null
+
     private val createFile = registerForActivityResult(ActivityResultContracts.StartActivityForResult()){
         it.data?.data?.let {
             createFile(it)
@@ -33,7 +35,11 @@ class MainActivity : AppCompatActivity() {
 
     private val readFile = registerForActivityResult(ActivityResultContracts.StartActivityForResult()){
         it.data?.data?.let {
-           binding.tvFileContent.text =  readFile(it)
+            uri = it
+            val read = readFile(it)
+           binding.tvFileContent.text =  read
+            binding.edUpdateFile.setText(read)
+
         }
     }
 
@@ -51,8 +57,30 @@ class MainActivity : AppCompatActivity() {
             readFile()
         }
 
+        binding.btnUpdateRead.setOnClickListener {
+            readFile()
+        }
+        binding.btnUpdate.setOnClickListener {
+            updateFile(uri!!,binding.edUpdateFile.text.toString())
+        }
+
+
 
     }
+
+
+    fun updateFile(uri:Uri,content:String){
+        try{
+            val parcelFileDescriptor = this.contentResolver.openFileDescriptor(uri,"rwt")
+            val fileOutputStream = FileOutputStream(parcelFileDescriptor?.fileDescriptor)
+            fileOutputStream.write(content.toByteArray())
+            fileOutputStream.close()
+            parcelFileDescriptor?.close()
+        }catch (e:Exception){
+            e.printStackTrace()
+        }
+    }
+
 
 
     fun readFile(){
@@ -61,6 +89,7 @@ class MainActivity : AppCompatActivity() {
         intent.type="text/*"
         readFile.launch(intent)
     }
+
     fun readFile(uri:Uri):String{
         return try {
             val inputStream = this.contentResolver.openInputStream(uri)
