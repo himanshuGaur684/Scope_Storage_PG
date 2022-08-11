@@ -44,6 +44,13 @@ class MainActivity : AppCompatActivity() {
     }
 
 
+    private val deleteFile = registerForActivityResult(ActivityResultContracts.StartActivityForResult()){
+        it.data?.data?.let {
+            deleteFile(it)
+        }
+    }
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         _binding = ActivityMainBinding.inflate(layoutInflater)
@@ -64,8 +71,33 @@ class MainActivity : AppCompatActivity() {
             updateFile(uri!!,binding.edUpdateFile.text.toString())
         }
 
+       binding.btnDelete.setOnClickListener {
+           deleteFile()
+       }
 
 
+    }
+
+
+    fun deleteFile(){
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
+        intent.addCategory(Intent.CATEGORY_OPENABLE)
+        intent.type = "text/*"
+        deleteFile.launch(intent)
+    }
+
+    @SuppressLint("Range")
+    fun deleteFile(uri:Uri){
+        val cursor = this.contentResolver.query(uri,null,null,null,null)
+        try {
+            if(cursor!=null && cursor.moveToFirst()){
+                DocumentsContract.deleteDocument(this.contentResolver,uri)
+            }
+        }catch (e:Exception){
+            e.printStackTrace()
+        }finally {
+            cursor?.close()
+        }
     }
 
 
